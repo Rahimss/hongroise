@@ -42,11 +42,7 @@ def hungarian_algorithm(cost_matrix):
                 covered_rows[i] = True
                 covered_cols[j] = True
 
-    total_cost = 0
-    for i, j in enumerate(assignment):
-        if i < n and j < m:
-            total_cost += cost_matrix[i, j]
-    return assignment, total_cost
+    return assignment
 
 # Function to convert a rectangular matrix to a square matrix
 def make_square(matrix):
@@ -92,7 +88,13 @@ def main():
     if st.button("Solve"):
         try:
             # Solve the assignment problem using the Hungarian Algorithm
-            assignment, total_cost = hungarian_algorithm(square_matrix)
+            assignment = hungarian_algorithm(square_matrix)
+
+            # Calculate the total cost using the original cost matrix
+            total_cost = 0
+            for i, j in enumerate(assignment):
+                if i < n and j < m:  # Only consider valid assignments within the original matrix dimensions
+                    total_cost += cost_matrix[i, j]
 
             # Display the result
             st.write("### Resultat:")
