@@ -1,7 +1,6 @@
 import streamlit as st
 import numpy as np
 
-# Hungarian Algorithm Implementation
 def hungarian_algorithm(cost_matrix):
     n, m = cost_matrix.shape
     assert n <= m, "Cost matrix must have more columns than rows"
@@ -12,39 +11,44 @@ def hungarian_algorithm(cost_matrix):
     # Step 2: Subtract the minimum value of each column from the column
     cost_matrix = cost_matrix - cost_matrix.min(axis=0, keepdims=True)
 
-    # Step 3: Cover all zeros with a minimum number of lines
-    covered_rows = np.zeros(n, dtype=bool)
-    covered_cols = np.zeros(m, dtype=bool)
-    zero_locations = np.where(cost_matrix == 0)
-    assignment = np.full(n, -1)
+    # Step 3: Find the minimum number of lines to cover all zeros
+    def find_min_lines(cost_matrix):
+        n, m = cost_matrix.shape
+        covered_rows = np.zeros(n, dtype=bool)
+        covered_cols = np.zeros(m, dtype=bool)
+        assignment = np.full(n, -1)
 
-    for i, j in zip(*zero_locations):
-        if not covered_rows[i] and not covered_cols[j]:
-            assignment[i] = j
-            covered_rows[i] = True
-            covered_cols[j] = True
+        # Find initial assignments
+        for i in range(n):
+            for j in range(m):
+                if cost_matrix[i, j] == 0 and not covered_rows[i] and not covered_cols[j]:
+                    assignment[i] = j
+                    covered_rows[i] = True
+                    covered_cols[j] = True
 
-    # Step 4: If all rows are assigned, return the assignment
-    if np.all(covered_rows):
+        # If all rows are assigned, return the assignment
+        if np.all(covered_rows):
+            return assignment
+
+        # Otherwise, find the minimum uncovered value and adjust the cost matrix
+        while not np.all(covered_rows):
+            min_uncovered = np.min(cost_matrix[~covered_rows][:, ~covered_cols])
+            cost_matrix[~covered_rows] -= min_uncovered
+            cost_matrix[:, covered_cols] += min_uncovered
+
+            # Update assignments
+            for i in range(n):
+                for j in range(m):
+                    if cost_matrix[i, j] == 0 and not covered_rows[i] and not covered_cols[j]:
+                        assignment[i] = j
+                        covered_rows[i] = True
+                        covered_cols[j] = True
+
         return assignment
 
-    # Step 5: Otherwise, find the minimum uncovered value and adjust the cost matrix
-    while not np.all(covered_rows):
-        min_uncovered = np.min(cost_matrix[~covered_rows][:, ~covered_cols])
-        cost_matrix[~covered_rows] -= min_uncovered
-        cost_matrix[:, covered_cols] += min_uncovered
-
-        # Repeat steps 3-5 until all rows are assigned
-        zero_locations = np.where(cost_matrix == 0)
-        for i, j in zip(*zero_locations):
-            if not covered_rows[i] and not covered_cols[j]:
-                assignment[i] = j
-                covered_rows[i] = True
-                covered_cols[j] = True
-
+    assignment = find_min_lines(cost_matrix)
     return assignment
 
-# Function to convert a rectangular matrix to a square matrix
 def make_square(matrix):
     n, m = matrix.shape
     max_size = max(n, m)
@@ -52,10 +56,8 @@ def make_square(matrix):
     square_matrix[:n, :m] = matrix
     return square_matrix
 
-# Streamlit App
 def main():
     st.title("algorithme hongrois BY DEBIECHE")
-    
 
     # Input matrix dimensions
     st.write("Enter the dimensions of the cost matrix:")
@@ -105,6 +107,5 @@ def main():
         except Exception as e:
             st.error(f"An error occurred: {e}")
 
-# Run the Streamlit app
 if __name__ == "__main__":
     main()
